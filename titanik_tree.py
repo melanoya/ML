@@ -6,7 +6,11 @@ from sklearn.ensemble import RandomForestClassifier
 from sklearn.model_selection import train_test_split, cross_val_score
 from sklearn.metrics import classification_report, f1_score
 import seaborn as sns
+from IPython.display import Image
+from sklearn.tree import export_graphviz
+import pydotplus
 import subprocess
+from sklearn import tree
 
 
 # make background white again!
@@ -16,10 +20,10 @@ sns.set(style="whitegrid", color_codes=True)
 df = pd.read_csv('titanic.csv', index_col='PassengerId')
 # print(df.info())
 
-# # на графике изображена доля выживших среди мужчин и женщин
+# на графике изображена доля выживших среди мужчин и женщин
 sns.barplot(x="Sex", y="Survived", data=df, palette='Set3')
 sns.plt.show()
-# # на графике изображена доля выживших среди людей трёх социальных классов
+# на графике изображена доля выживших среди людей трёх социальных классов
 sns.barplot(x="Pclass", y="Survived", data=df, palette='Set3')
 sns.plt.show()
 # # на графике изображена стоимость билета в зависимости от социально-экономического класса пассажира
@@ -62,25 +66,12 @@ y_pred = clf.predict(x_test)
 print(classification_report(y_test, y_pred))
 print(np.mean(cross_val_score(clf, x_train, y_train, cv=5)))
 
-features = list(df['Survived'])
 
-
-def visualize_tree(tree, feature_names):
-    """Create tree png using graphviz.
-    tree -- scikit-learn DecsisionTree.
-    feature_names -- list of feature names.
-    """
-    with open("dt.dot", 'w') as f:
-        export_graphviz(tree, out_file=f,
-                        feature_names=feature_names)
-
-    command = ["dot", "-Tpng", "dt.dot", "-o", "dt.png"]
-    try:
-        subprocess.check_call(command)
-    except:
-        exit("Could not run dot, ie graphviz, to produce visualization")
-
-# visualize_tree(clf, features)
+dot_data = tree.export_graphviz(clf, out_file=None, feature_names=x.columns,
+                                class_names=['Survived', 'Not survived'], filled=True,
+                                rounded=True, special_characters=True)
+graph = pydotplus.graph_from_dot_data(dot_data)
+Image(graph.create_png())
 
 # TASK 5
 model = RandomForestClassifier(n_estimators=100)
